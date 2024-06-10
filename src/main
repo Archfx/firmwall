@@ -17,7 +17,7 @@ main = project.loader.main_object.get_symbol("psa_sign_hash")
 print (main)
 start_state = project.factory.blank_state(addr=main.rebased_addr)
 cfg = project.analyses.CFGEmulated(fail_fast=True, starts=[main.rebased_addr], initial_state=start_state)
-plot_cfg(cfg, "psa_sign_hash", asminst=True, remove_imports=True, remove_path_terminator=True)
+plot_cfg(cfg, "psa_sign_hash", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
 # Generate the control flow graph
 # cfg = project.analyses.CFGFast()
 
