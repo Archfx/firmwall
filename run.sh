@@ -1,3 +1,37 @@
+
+install_deps() {
+
+		cd .venv
+		mkdir deps
+		cd deps
+		git clone https://github.com/angr/archinfo.git 
+		git clone --recursive https://github.com/angr/pyvex.git
+		git clone https://github.com/angr/cle.git
+		git clone https://github.com/angr/claripy.git
+		git clone https://github.com/angr/ailment.git
+		git clone https://github.com/angr/angr.git
+		git clone https://github.com/angr/angr-management.git
+		git clone https://github.com/angr/binaries.git
+		git clone https://github.com/axt/bingraphvis
+		git clone https://github.com/axt/angr-utils
+
+		pip install -U pip wheel setuptools cffi "unicorn==2.0.1.post1"
+
+		pip install -e ./archinfo
+		pip install -e ./pyvex
+		pip install -e ./cle 
+		pip install -e ./claripy 
+		pip install -e ./ailment 
+		pip install --no-build-isolation -e ./angr --config-settings editable_mode=strict
+		pip install -e ./angr-management --config-settings editable_mode=strict
+		pip install -e ./bingraphvis
+		pip install -e ./angr-utils
+
+		cd ../../
+
+		# rm -rf archinfo pyvex cle claripy ailment angr angr-management
+}
+
 # Define the function
 setup_venv() {
     # Check if .venv directory exists
@@ -9,8 +43,10 @@ setup_venv() {
         # Activate the virtual environment
         if [ "$(uname)" == "Darwin" ] || [ "$(uname -s)" == "Linux" ]; then
             source .venv/bin/activate
+			install_deps
         elif [ "$(uname -s | grep -i 'cygwin\|mingw\|msys')" ]; then
             source .venv/Scripts/activate
+			install_deps
         else
             echo "Unsupported OS. Cannot activate virtual environment."
             return 1
