@@ -1,2 +1,0 @@
-This is the graph: DiGraph with 892 nodes and 1418 edges
-It has 892 nodes and 1418 edges

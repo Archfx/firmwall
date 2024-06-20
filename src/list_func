@@ -5,7 +5,7 @@ import claripy
 import angr
 from angrutils import *
 import pickle
-import json
+import yaml
 
 import csv
 
@@ -26,15 +26,9 @@ cfg = project.analyses.CFGEmulated(keep_state=True)
 print("This is the graph:", cfg.graph)
 print("It has %d nodes and %d edges" % (len(cfg.graph.nodes()), len(cfg.graph.edges())))
 
-# graph_data = {
-#     "nodes": list(cfg.graph.nodes()),
-#     "edges": list(cfg.graph.edges())
-# }
-
-# # Save cfg object to a file
-# with open(res_folder+'/cfg.json', 'wb') as f:
-#     # dill.dump(cfg, f)
-#     json.dump(graph_data, f)
+with open(res_folder+"/cfg.gpickle", 'w') as f:
+    # pickle.dump(cfg, f, pickle.HIGHEST_PROTOCOL)
+    yaml.dump(cfg, f)
 
 functions = []
 
