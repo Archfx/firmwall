@@ -8,7 +8,7 @@ from patcherex.patches import *
 
 # the detour backend can be used as well:
 # backend = DetourBackend("test_binaries/CADET_00003")
-backend = ReassemblerBackend("test_binaries/CADET_00003")
+backend = ReassemblerBackend("binaries/patchrex_ex")
 patches = []
 
 transmit_code = '''

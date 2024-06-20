@@ -4,12 +4,21 @@ import sys
 import claripy
 import angr
 from angrutils import *
+import pickle
+import json
+
+import csv
+
+
+# load graph object from file
+# G = pickle.load(open('filename.pickle', 'rb'))
 
 if len(sys.argv) < 2:
-    print("Usage: script.py <path_to_elf_file>")
+    print("Usage: script.py <path_to_elf_file> <path_to_res>" )
     sys.exit(1)
 
 elf_file = sys.argv[1]
+res_folder = sys.argv[2]
 
 project = angr.Project(elf_file, load_options={'auto_load_libs': False})
 
@@ -17,7 +26,34 @@ cfg = project.analyses.CFGEmulated(keep_state=True)
 print("This is the graph:", cfg.graph)
 print("It has %d nodes and %d edges" % (len(cfg.graph.nodes()), len(cfg.graph.edges())))
 
+# graph_data = {
+#     "nodes": list(cfg.graph.nodes()),
+#     "edges": list(cfg.graph.edges())
+# }
 
-print("List of functions in the binary:")
+# # Save cfg object to a file
+# with open(res_folder+'/cfg.json', 'wb') as f:
+#     # dill.dump(cfg, f)
+#     json.dump(graph_data, f)
+
+functions = []
+
+# Iterate over functions and collect data
 for func_addr, func in cfg.kb.functions.items():
-    print(f"Function name: {func.name}, Address: {hex(func_addr)}")
+    functions.append({
+        "func_name": func.name,
+        "func_addr": hex(func_addr)
+    })
+
+# print("List of functions in the binary:")
+# for func_addr, func in cfg.kb.functions.items():
+#     print(f"Function name: {func.name}, Address: {hex(func_addr)}")
+
+# CSV file path
+csv_file = res_folder+"/functions.csv"
+fields = ["func_name", "func_addr"]
+with open(csv_file, mode='w', newline='') as file:
+    writer = csv.DictWriter(file, fieldnames=fields)
+    writer.writeheader()
+    for func in functions:
+        writer.writerow(func)

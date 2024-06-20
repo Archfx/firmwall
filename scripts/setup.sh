@@ -67,3 +67,5 @@ setup_venv() {
         echo ".venv directory already exists. Skipping virtual environment setup."
     fi
 }
+
+setup_venv
