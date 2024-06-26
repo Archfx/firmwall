@@ -1,7 +1,13 @@
 TOPTARGETS := all
 
+BOLD = \033[1m
+YELLOW = \033[33m
+RESET = \033[0m
+
 # Define the Python scripts and their arguments
 LIST_FN := $(FIRMWALL_HOME)/src/list_func
+SYMB_FN := $(FIRMWALL_HOME)/src/symbolic_sim
+SVG_FN := $(FIRMWALL_HOME)/src/save_svg
 ELF_FILE := bin/zephyr.elf
 
 # SUBDIRS := $(wildcard tfm_integration/*/.)
@@ -14,12 +20,16 @@ SUBDIRS := $(wildcard */)
 
 $(TOPTARGETS): $(SUBDIRS)
 $(SUBDIRS):
-		@echo "Processing $@"
+		@echo "$(BOLD)$(YELLOW)Processing $@"
+		@echo "================================================= $(RESET)"
 		mkdir -p $@/res
 		start_time=$$(date +%s); \
 		python3 $(LIST_FN) $@/$(ELF_FILE) $@/res; \
+		python3 $(SYMB_FN) $@/$(ELF_FILE) $@/res; \
+		python3 $(SVG_FN) $@/$(ELF_FILE) $@/res; \
 		end_time=$$(date +%s); \
-		echo "Elapsed time: $$((end_time - start_time)) seconds."
+		echo "$(BOLD)$(YELLOW)Elapsed time: $$((end_time - start_time)) seconds."
+		@echo "================================================= $(RESET)"
 
 
 

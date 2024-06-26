@@ -4,9 +4,11 @@ import sys
 import claripy
 import angr
 from angrutils import *
+import networkx as nx
+
 import pickle
 import yaml
-
+import dill
 import csv
 
 
@@ -23,12 +25,11 @@ res_folder = sys.argv[2]
 project = angr.Project(elf_file, load_options={'auto_load_libs': False})
 
 cfg = project.analyses.CFGEmulated(keep_state=True)
-print("This is the graph:", cfg.graph)
-print("It has %d nodes and %d edges" % (len(cfg.graph.nodes()), len(cfg.graph.edges())))
 
-with open(res_folder+"/cfg.gpickle", 'w') as f:
-    # pickle.dump(cfg, f, pickle.HIGHEST_PROTOCOL)
-    yaml.dump(cfg, f)
+
+with open(res_folder+"/elf.dill", 'wb') as f:
+    dill.dump((project, cfg), f)
+
 
 functions = []
 

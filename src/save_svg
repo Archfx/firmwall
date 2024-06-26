@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+import sys
+import claripy
+import angr
+from angrutils import *
+import dill
+
+if len(sys.argv) < 2:
+    print("Usage: script.py <path_to_res>" )
+    sys.exit(1)
+
+elf_file = sys.argv[1]
+res_folder = sys.argv[2]
+
+project = angr.Project(elf_file, load_options={'auto_load_libs': False})
+
+# load graph object from file
+with open(res_folder + "/elf.dill", 'rb') as f:
+    project, cfg = dill.load(f)
+
+
+
+main = project.loader.main_object.get_symbol("psa_sign_hash")
+print (main)
+start_state = project.factory.blank_state(addr=main.rebased_addr)
+cfg = project.analyses.CFGEmulated(fail_fast=True, starts=[main.rebased_addr], initial_state=start_state)
+plot_cfg(cfg, res_folder + "cfg", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
+
