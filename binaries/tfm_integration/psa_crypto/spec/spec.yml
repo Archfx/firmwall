@@ -1,0 +1,205 @@
+psa_crypto_init:
+  inputs: []
+
+psa_key_derivation_output_key:
+  inputs:
+    - psa_key_derivation_operation_t operation:
+        constraints:
+          - "operation must be active"
+    - psa_key_attributes_t *attributes:
+        constraints:
+          - "attributes must be initialized"
+    - psa_key_handle_t *handle:
+        constraints:
+          - "handle must be valid"
+
+psa_key_derivation_setup:
+  inputs:
+    - psa_key_derivation_operation_t *operation:
+        constraints:
+          - "operation must be inactive"
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid key derivation algorithm"
+
+psa_mac_compute:
+  inputs:
+    - psa_key_handle_t key:
+        constraints:
+          - "key must be a valid key handle"
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid MAC algorithm"
+    - const uint8_t *input:
+        constraints:
+          - "input must be non-null"
+    - size_t input_length:
+        constraints: []
+    - uint8_t *mac:
+        constraints: []
+    - size_t mac_size:
+        constraints:
+          - "mac_size must be sufficient"
+    - size_t *mac_length:
+        constraints: []
+
+psa_cipher_encrypt:
+  inputs:
+    - psa_key_handle_t key:
+        constraints:
+          - "key must be a valid key handle"
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid cipher algorithm"
+    - const uint8_t *input:
+        constraints:
+          - "input must be non-null"
+    - size_t input_length:
+        constraints: []
+    - uint8_t *output:
+        constraints: []
+    - size_t output_size:
+        constraints:
+          - "output_size must be sufficient"
+    - size_t *output_length:
+        constraints: []
+
+psa_cipher_decrypt:
+  inputs:
+    - psa_key_handle_t key:
+        constraints:
+          - "key must be a valid key handle"
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid cipher algorithm"
+    - const uint8_t *input:
+        constraints:
+          - "input must be non-null"
+    - size_t input_length:
+        constraints: []
+    - uint8_t *output:
+        constraints: []
+    - size_t output_size:
+        constraints:
+          - "output_size must be sufficient"
+    - size_t *output_length:
+        constraints: []
+
+psa_asymmetric_encrypt:
+  inputs:
+    - psa_key_handle_t key:
+        constraints:
+          - "key must be a valid key handle"
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid asymmetric encryption algorithm"
+    - const uint8_t *input:
+        constraints:
+          - "input must be non-null"
+    - size_t input_length:
+        constraints: []
+    - const uint8_t *salt:
+        constraints: []
+    - size_t salt_length:
+        constraints: []
+    - uint8_t *output:
+        constraints: []
+    - size_t output_size:
+        constraints:
+          - "output_size must be sufficient"
+    - size_t *output_length:
+        constraints: []
+
+psa_asymmetric_decrypt:
+  inputs:
+    - psa_key_handle_t key:
+        constraints:
+          - "key must be a valid key handle"
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid asymmetric encryption algorithm"
+    - const uint8_t *input:
+        constraints:
+          - "input must be non-null"
+    - size_t input_length:
+        constraints: []
+    - const uint8_t *salt:
+        constraints: []
+    - size_t salt_length:
+        constraints: []
+    - uint8_t *output:
+        constraints: []
+    - size_t output_size:
+        constraints:
+          - "output_size must be sufficient"
+    - size_t *output_length:
+        constraints: []
+
+psa_generate_random:
+  inputs:
+    - uint8_t *output:
+        constraints:
+          - "output must be non-null"
+    - size_t output_size:
+        constraints:
+          - "output_size must be non-zero"
+
+psa_generate_key:
+  inputs:
+    - const psa_key_attributes_t *attributes:
+        constraints:
+          - "attributes must be initialized"
+    - psa_key_handle_t *handle:
+        constraints:
+          - "handle must be valid"
+
+psa_hash_compute:
+  inputs:
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid hash algorithm"
+    - const uint8_t *input:
+        constraints:
+          - "input must be non-null"
+    - size_t input_length:
+        constraints: []
+    - uint8_t *hash:
+        constraints: []
+    - size_t hash_size:
+        constraints:
+          - "hash_size must be sufficient"
+    - size_t *hash_length:
+        constraints: []
+
+psa_hash_setup:
+  inputs:
+    - psa_hash_operation_t *operation:
+        constraints:
+          - "operation must be inactive"
+    - psa_algorithm_t alg:
+        constraints:
+          - "alg must be a valid hash algorithm"
+
+psa_hash_update:
+  inputs:
+    - psa_hash_operation_t *operation:
+        constraints:
+          - "operation must be active"
+    - const uint8_t *input:
+        constraints:
+          - "input must be non-null"
+    - size_t input_length:
+        constraints: []
+
+psa_hash_finish:
+  inputs:
+    - psa_hash_operation_t *operation:
+        constraints:
+          - "operation must be active"
+    - uint8_t *hash:
+        constraints: []
+    - size_t hash_size:
+        constraints:
+          - "hash_size must be sufficient"
+    - size_t *hash_length:
+        constraints: []
