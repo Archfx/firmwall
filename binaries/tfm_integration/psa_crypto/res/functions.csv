@@ -110,6 +110,7 @@ z_arm_fault_init,0x102f21
 z_arm_hard_fault,0x102f31
 sub_102f43,0x102f43
 __start,0x102f45
+sub_102f95,0x102f95
 z_arm_clear_arm_mpu_config,0x102fa1
 z_arm_init_arch_hw_at_boot,0x102fc5
 sub_10300b,0x10300b
@@ -269,6 +270,7 @@ z_bss_zero,0x1054b5
 z_init_cpu,0x1054cd
 sub_10552f,0x10552f
 z_cstart,0x105549
+sub_1055fb,0x1055fb
 sub_105601,0x105601
 z_impl_k_mutex_lock,0x10561d
 sub_10565b,0x10565b

@@ -1,0 +1,349 @@
+#!/usr/bin/env python
+
+import sys
+import claripy
+import angr
+from angrutils import *
+import networkx as nx
+import argparse
+
+import re
+
+import csv
+import yaml
+
+import logging
+logging.getLogger('angr.analyses').setLevel('ERROR')
+logging.getLogger('angr').setLevel('ERROR')
+
+path = ""
+elf_file = ""
+func_file = ""
+
+def load_spec(yaml_file):
+    with open(yaml_file, 'r') as file:
+        return yaml.safe_load(file)
+
+def decode_fn_spec(spec_fn, imp_fn):
+    if imp_fn in spec_fn:
+        function_details = spec_fn[imp_fn]
+        inputs = function_details["inputs"]
+        return inputs
+    else:
+        raise ValueError(f"Function '{function_name}' not found in PSA Crypto functions")
+
+
+def write_functions_csv( functions, save_csv=True):
+	functions = []
+	# Iterate over functions and collect data
+	for func_addr, func in cfg.kb.functions.items():
+		functions.append({
+			"func_name": func.name,
+			"func_addr": hex(func_addr)
+		})
+	if (save_csv):
+		fields = ["func_name", "func_addr"]
+		with open(func_file, mode='w', newline='') as file:
+			writer = csv.DictWriter(file, fieldnames=fields)
+			writer.writeheader()
+			for func in functions:
+				writer.writerow(func)
+	return functions
+
+def save_cfg(project, start_fn, cfg_name):
+	main = project.loader.main_object.get_symbol(start_fn)
+	start_state = project.factory.blank_state(addr=main.rebased_addr)
+	cfg = project.analyses.CFGEmulated(fail_fast=True, starts=[main.rebased_addr], initial_state=start_state)
+	plot_cfg(cfg, cfg_name, format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
+
+# Function to locate the address of psa_sign_hash
+def locate_function(project, func_name):
+    cfg = project.analyses.CFGFast()
+    for func_addr, func in cfg.kb.functions.items():
+        if func.name == func_name:
+            return func_addr
+    return None
+
+def get_subgraphs_to_end_nodes(cfg_graph, end_nodes):
+    # Reverse the graph
+    reversed_cfg = cfg_graph.reverse()
+
+    subgraphs = {}
+    for end_node in end_nodes:
+        # Use DFS to find all reachable nodes from the end node in the reversed graph
+        reachable_nodes = set(nx.dfs_preorder_nodes(reversed_cfg, source=end_node))
+        
+        # Extract the subgraph from the original CFG
+        subgraph = cfg_graph.subgraph(reachable_nodes).copy()
+        
+        subgraphs[end_node] = subgraph
+
+    return subgraphs
+
+# Function to extract address from the CFGNode string
+def extract_address(node_str):
+    # Example: "ecdsa_verify_psa+0x74"
+    match = re.search(r'\+(0x[0-9a-fA-F]+)', node_str)
+    if match:
+        return int(match.group(1), 16)
+    else:
+        raise ValueError("Invalid node string format")
+
+def get_starting_nodes(subgraph):
+	starting_nodes = []
+	starting_addrs = []
+	for node in subgraph.nodes:
+		if subgraph.in_degree(node) == 0:  # No predecessors
+			starting_nodes.append(node.name)
+			starting_addrs.append(node.addr)
+	return starting_nodes, starting_addrs
+
+# Define a path constraint to reach the function
+def is_at_function(state):
+	return state.addr == function_address
+
+
+def get_args():
+	# Create the parser
+	parser = argparse.ArgumentParser(description="Firmware firmware binary analysis tool.")
+
+	# Add arguments
+	parser.add_argument('-d', '--dumpfn', action='store_true', help='Dump available functions in the firmware')
+	# parser.add_argument('-n', '--number', type=int, help='A number to process')
+	# parser.add_argument('-s', '--string', type=str, help='A string to process')
+	# parser.add_argument('-l', '--list', nargs='+', help='A list of values')
+
+	# Parse the arguments
+	args = parser.parse_args()
+
+	# Use the arguments
+	# if args.verbose:
+	#     print("Verbose mode enabled")
+
+	return args.dumpfn
+
+class serviceInfo:
+	def __init__(self, starting_nodes, starting_addrs, end_node, subgraph):
+		self.starting_nodes = starting_nodes
+		self.starting_addrs = starting_addrs
+		self.end_node = end_node
+		self.subgraph = subgraph
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print("Usage: firmwall <firmware_path>" )
+		sys.exit(1)
+
+	path = sys.argv[1]
+	elf_file = path+"/bin/zephyr.elf"
+	res_folder = path + "/res"
+	func_file = res_folder+"/functions.csv"
+
+
+	project = angr.Project(elf_file, load_options={'auto_load_libs': False})
+	# cfg = project.analyses.CFGFast(show_progressbar=True)
+	
+	cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True)
+	plot_cfg(cfg, res_folder + "cfg-latest", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
+
+	# function_nodes = []
+	# for func_addr, func in cfg.kb.functions.items():
+	# 	# print(f"Function name: {func.name}, Address: {hex(func_addr)}")
+	# 	# Get the node corresponding to the function address
+	# 	func_node = cfg.get_any_node(func_addr)
+	# 	if func_node:
+	# 		function_nodes.append(func_node)
+	
+	# print(function_nodes)
+
+	# print("This is the graph:", cfg.graph)
+	# print("It has %d nodes and %d edges" % (len(cfg.graph.nodes()), len(cfg.graph.edges())))
+	# print(cfg.graph.nodes())
+
+	# print(function_nodes)
+
+	# for x in function_nodes:
+	# 	print(x)
+
+	# service_nodes = [
+
+	# 	"psa_crypto_init",
+	# 	# Key Management
+	# 	"psa_generate_key",
+	# 	"psa_import_key",
+	# 	"psa_export_key",
+	# 	"psa_destroy_key",
+
+	# 	# Hashing
+	# 	"psa_hash_setup",
+	# 	"psa_hash_update",
+	# 	"psa_hash_finish",
+	# 	"psa_hash_verify",
+
+	# 	# Message Authentication Codes (MAC)
+	# 	"psa_mac_compute",
+	# 	"psa_mac_sign_setup",
+	# 	"psa_mac_verify_setup",
+	# 	"psa_mac_update",
+	# 	"psa_mac_sign_finish",
+	# 	"psa_mac_verify_finish",
+
+	# 	# Symmetric Encryption and Decryption
+	# 	"psa_cipher_encrypt_setup",
+	# 	"psa_cipher_decrypt_setup",
+	# 	"psa_cipher_update",
+	# 	"psa_cipher_finish",
+
+	# 	# Asymmetric Encryption and Decryption
+	# 	"psa_asymmetric_encrypt",
+	# 	"psa_asymmetric_decrypt",
+
+	# 	# Digital Signatures
+	# 	"psa_sign_hash",
+	# 	"psa_verify_hash",
+
+	# 	# Key Agreement
+	# 	"psa_raw_key_agreement",
+
+	# 	# Random Number Generation
+	# 	"psa_generate_random"
+	# ]
+
+
+	# end_nodes = []
+	# for node in function_nodes:
+	# 	func = cfg.kb.functions.get(node.function_address)
+		
+	# 	if func and (func.name  in service_nodes):
+	# 		# print(func)
+	# 		end_nodes.append(node)
+
+
+
+
+	# subgraphs = get_subgraphs_to_end_nodes(cfg.graph, end_nodes)
+
+	# info = [] 
+	# # Print the subgraphs or process them as needed
+	# for end_node, subgraph in subgraphs.items():
+	# 	# print(f"Subgraph ending at node {end_node}:")
+	# 	# print(subgraph)
+	# 	starting_nodes, starting_addrs = get_starting_nodes(subgraph)
+	# 	# print(starting_nodes)
+	# 	info.append(serviceInfo(starting_nodes, starting_addrs, end_node.name, subgraph))
+	# # dumpfn = get_args()
+
+	# # Accessing attributes of the object
+	# for x in info:
+	# 	print("=============================================" )
+	# 	print("Starting nodes:", x.starting_nodes)
+	# 	# print("Starting addrs:", x.starting_addrs)
+	# 	print("End node:", x.end_node)
+	# 	print("Subgraph:", x.subgraph)
+	# 	print("=============================================" )
+		
+	# 	# end_node = project.loader.main_object.get_symbol(x.end_node)
+	# 	# start_node_addr = []
+	# 	# for y in x.starting_nodes:
+	# 	# 	start_node_addr.append(project.loader.main_object.get_symbol(y))
+			
+	# 	# print (start_node)
+	# 	# start_state = project.factory.blank_state(addr=start_node.rebased_addr)
+		
+	# 	# avoid_addrs=[1069979, 1063833, 1070069, 1050167]
+	# 	# # subcfg = project.analyses.CFGEmulated( starts=x.starting_addrs , resolve_indirect_jumps=True, base_graph = x.subgraph, avoid_runs=avoid_addrs, show_progressbar=True)
+
+	# 	# # subcfg = project.analyses.CFGEmulated( starts=x.starting_addrs, show_progressbar=True)
+	# 	# for y in range (len(x.starting_addrs)):
+	# 	# 	if (x.starting_addrs[y] not in avoid_addrs):
+	# 	# 		print("using addr", x.starting_addrs[y], x.starting_nodes[y])
+	# 	# 		subcfg = project.analyses.CFGEmulated( starts=[x.starting_addrs[y]] , resolve_indirect_jumps=True, show_progressbar=True)
+	# 	# 		# plot_cfg(subcfg, res_folder + "/cfg_"+x.end_node, format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
+
+	# 	# Locate the psa_sign_hash function
+
+	# ===================
+	# Function of interest
+	# function_name = "psa_crypto_init"
+	# function = cfg.kb.functions.function(name=function_name)
+	# function_address = function.addr
+	# print(f"Function {function_name} is at address: {hex(function_address)}")
+
+	# # Create a blank state at the entry point
+	# initial_state = project.factory.blank_state(addr=project.entry)
+
+	# # Setup the path group for exploration
+	# simgr = project.factory.simulation_manager(initial_state)
+	# simgr.step()
+	# print(simgr.active)
+
+
+	# print("test point 1")
+	# # Explore all paths to the function
+	# # simgr.explore(find=is_at_function, show_progressbar=True)
+	# simgr.explore(find=lambda s: s.addr == function_address + 4)
+
+	# print("test point 2")
+	# # Iterate through found paths
+	# for found in simgr.found:
+	# 	# Get the call site of the function
+	# 	caller_state = found.history.bbl_addrs[-2]  # Assuming the function is directly called
+		
+	# 	# Analyze the data flow to the function's inputs
+	# 	for arg in found.callstack.current_args:
+	# 		print(f"Argument value: {arg}")
+
+	# 		# Perform further analysis if needed, such as tracking the source of the data
+	# 		# Example: Get the symbolic expression of the argument
+	# 		symbolic_expr = found.solver.eval(arg)
+	# 		print(f"Symbolic expression: {symbolic_expr}")
+
+	# 	# if (x.end_node == 'psa_sign_hash'):
+	# 	# 	func_addr = locate_function(project, 'psa_sign_hash')
+	# 	# 	if func_addr is None:
+	# 	# 		raise Exception("Function psa_sign_hash not found in the binary")
+
+	# 	# 	# # Create a state at the start of the psa_sign_hash function
+	# 	# 	state = project.factory.blank_state(addr=func_addr)
+
+	# 	# 	# Define function arguments
+	# 	# 	key = claripy.BVS('key', 32)  # Assume 32-bit key ID
+	# 	# 	alg = claripy.BVS('alg', 32)  # Assume 32-bit algorithm ID
+	# 	# 	hash_ptr = claripy.BVV(0x10000000, 32)  # Assume a hash pointer at 0x10000000
+	# 	# 	hash_length = claripy.BVS('hash_length', 32)  # Size of the hash buffer
+	# 	# 	signature_ptr = claripy.BVV(0x20000000, 32)  # Assume a signature buffer pointer at 0x20000000
+	# 	# 	signature_size = claripy.BVS('signature_size', 32)  # Size of the signature buffer
+	# 	# 	signature_length_ptr = claripy.BVV(0x30000000, 32)  # Assume a pointer to the signature length
+
+	# 	# 	# Set registers or stack values for the function arguments
+	# 	# 	state.regs.r0 = key
+	# 	# 	state.regs.r1 = alg
+	# 	# 	state.regs.r2 = hash_ptr
+	# 	# 	state.regs.r3 = hash_length
+	# 	# 	state.regs.r4 = signature_ptr
+	# 	# 	state.regs.r5 = signature_size
+	# 	# 	state.regs.r6 = signature_length_ptr
+
+	# 	# 	# Define constraints for valid parameters
+	# 	# 	state.solver.add(key != 0)
+	# 	# 	state.solver.add(alg != 0)
+	# 	# 	state.solver.add(hash_ptr != 0)
+	# 	# 	state.solver.add(hash_length > 0)
+	# 	# 	state.solver.add(signature_ptr != 0)
+	# 	# 	state.solver.add(signature_size > 0)
+	# 	# 	state.solver.add(signature_length_ptr != 0)
+
+	# 	# 	# Simulate the function
+	# 	# 	simgr = project.factory.simulation_manager(state)
+	# 	# 	simgr.explore(find=lambda s: s.addr == func_addr + 4)  # Adjust the offset as needed
+
+	# 	# 	# Check results
+	# 	# 	if simgr.found:
+	# 	# 		for found_state in simgr.found:
+	# 	# 			print("Assertions satisfied at address:", hex(found_state.addr))
+	# 	# 	else:
+	# 	# 		print("No paths found that satisfy the assertions.")		
+
+	# # if dumpfn:
+	# write_functions_csv(cfg.kb.functions.items());	
+	
