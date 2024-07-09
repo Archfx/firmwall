@@ -1,0 +1,31 @@
+functions:
+  - function:
+      name: reverseArray
+      num_args: 2
+      arg_1: 
+        name: array
+        type: ptr
+        size: 32
+        constraints: [byte-array]
+      arg_2: 
+        name: length
+        type: int
+        size: 32
+        constraints: [0<, 10>, int]
+      output:
+        type: int
+        size: 32
+
+  - function:
+      name: randomValues
+      num_args: 1
+      arg_1: 
+        name: maxsize
+        type: int
+        size: 32
+        constraints: [0<, 10>, int]
+      output:
+        type: int
+        size: 32
+
+

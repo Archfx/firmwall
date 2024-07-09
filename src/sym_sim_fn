@@ -122,6 +122,17 @@ def get_args():
 
 	return args.dumpfn
 
+def getFuncAddress( funcName, plt=None ):
+        found = [
+            addr for addr,func in cfg.kb.functions.items()
+            if funcName == func.name and (plt is None or func.is_plt == plt)
+            ]
+        if len( found ) > 0:
+            print("Found "+funcName+"'s address at "+hex(found[0])+"!")
+            return found[0]
+        else:
+            raise Exception("No address found for function : "+funcName)
+
 class serviceInfo:
 	def __init__(self, starting_nodes, starting_addrs, end_node, subgraph):
 		self.starting_nodes = starting_nodes
@@ -143,8 +154,14 @@ if __name__ == "__main__":
 	project = angr.Project(elf_file, load_options={'auto_load_libs': False})
 	# cfg = project.analyses.CFGFast(show_progressbar=True)
 	
-	cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True)
-	plot_cfg(cfg, res_folder + "cfg-latest", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
+	# cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True)
+	# plot_cfg(cfg, res_folder + "cfg-latest", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
+
+	main = project.loader.main_object.get_symbol("psa_sign_hash")
+	print (main)
+	start_state = project.factory.blank_state(addr=main.rebased_addr)
+	cfg = project.analyses.CFGEmulated(fail_fast=True, starts=[main.rebased_addr], initial_state=start_state, show_progressbar=True)
+	plot_cfg(cfg, res_folder + "cfg", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
 
 	# function_nodes = []
 	# for func_addr, func in cfg.kb.functions.items():
@@ -221,129 +238,81 @@ if __name__ == "__main__":
 
 
 
-	# subgraphs = get_subgraphs_to_end_nodes(cfg.graph, end_nodes)
+	subgraphs = get_subgraphs_to_end_nodes(cfg.graph, end_nodes)
 
-	# info = [] 
-	# # Print the subgraphs or process them as needed
-	# for end_node, subgraph in subgraphs.items():
-	# 	# print(f"Subgraph ending at node {end_node}:")
-	# 	# print(subgraph)
-	# 	starting_nodes, starting_addrs = get_starting_nodes(subgraph)
-	# 	# print(starting_nodes)
-	# 	info.append(serviceInfo(starting_nodes, starting_addrs, end_node.name, subgraph))
-	# # dumpfn = get_args()
+	info = [] 
+	# Print the subgraphs or process them as needed
+	for end_node, subgraph in subgraphs.items():
+		# print(f"Subgraph ending at node {end_node}:")
+		# print(subgraph)
+		starting_nodes, starting_addrs = get_starting_nodes(subgraph)
+		# print(starting_nodes)
+		info.append(serviceInfo(starting_nodes, starting_addrs, end_node.name, subgraph))
 
-	# # Accessing attributes of the object
-	# for x in info:
-	# 	print("=============================================" )
-	# 	print("Starting nodes:", x.starting_nodes)
-	# 	# print("Starting addrs:", x.starting_addrs)
-	# 	print("End node:", x.end_node)
-	# 	print("Subgraph:", x.subgraph)
-	# 	print("=============================================" )
+
+	# Accessing attributes of the object
+	for x in info:
+		print("=============================================" )
+		print("Starting nodes:", x.starting_nodes)
+		# print("Starting addrs:", x.starting_addrs)
+		print("End node:", x.end_node)
+		print("Subgraph:", x.subgraph)
+		print("=============================================" )
+
 		
-	# 	# end_node = project.loader.main_object.get_symbol(x.end_node)
-	# 	# start_node_addr = []
-	# 	# for y in x.starting_nodes:
-	# 	# 	start_node_addr.append(project.loader.main_object.get_symbol(y))
-			
-	# 	# print (start_node)
-	# 	# start_state = project.factory.blank_state(addr=start_node.rebased_addr)
 		
-	# 	# avoid_addrs=[1069979, 1063833, 1070069, 1050167]
-	# 	# # subcfg = project.analyses.CFGEmulated( starts=x.starting_addrs , resolve_indirect_jumps=True, base_graph = x.subgraph, avoid_runs=avoid_addrs, show_progressbar=True)
+		state = project.factory.entry_state(args=argv)
 
-	# 	# # subcfg = project.analyses.CFGEmulated( starts=x.starting_addrs, show_progressbar=True)
-	# 	# for y in range (len(x.starting_addrs)):
-	# 	# 	if (x.starting_addrs[y] not in avoid_addrs):
-	# 	# 		print("using addr", x.starting_addrs[y], x.starting_nodes[y])
-	# 	# 		subcfg = project.analyses.CFGEmulated( starts=[x.starting_addrs[y]] , resolve_indirect_jumps=True, show_progressbar=True)
-	# 	# 		# plot_cfg(subcfg, res_folder + "/cfg_"+x.end_node, format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
+		'''
+		Create a new SimulationManager from the entry state
+		'''
+		sm = project.factory.simulation_manager(state)
 
-	# 	# Locate the psa_sign_hash function
+		def check(state):
+			if (state.ip.args[0] == addrStrcpy):    # Ensure that we're at strcpy
+				'''
+				By looking at the disassembly, I've found that the pointer to the
+				source buffer given to strcpy() is kept in RSI.  Here, we dereference
+				the pointer in RSI and grab 8 bytes (len("HAHAHAHA")) from that buffer.
+				'''
+				BV_strCpySrc = state.memory.load( state.regs.rsi, len(argv[2]) )
+				'''
+				Now that we have the contents of the source buffer in the form of a bit
+				vector, we grab its string representation using the current state's
+				solver engine's function "eval" with cast_to set to str so we get a python string.
+				'''
+				strCpySrc = state.solver.eval( BV_strCpySrc , cast_to=bytes )
+				'''
+				Now we simply return True (found path) if we've found a path to strcpy
+				where we control the source buffer, or False (keep looking for paths) if we
+				don't control the source buffer
+				'''
+				return True if argv[2].encode() in strCpySrc else False
+			else:
+				'''
+				If we aren't in the strcpy function, we need to tell angr to keep looking
+				for new paths.
+				'''
+				return False
 
-	# ===================
-	# Function of interest
-	# function_name = "psa_crypto_init"
-	# function = cfg.kb.functions.function(name=function_name)
-	# function_address = function.addr
-	# print(f"Function {function_name} is at address: {hex(function_address)}")
+		sm = sm.explore(find=check, avoid=(addrBadFunc,))
 
-	# # Create a blank state at the entry point
-	# initial_state = project.factory.blank_state(addr=project.entry)
-
-	# # Setup the path group for exploration
-	# simgr = project.factory.simulation_manager(initial_state)
-	# simgr.step()
-	# print(simgr.active)
-
-
-	# print("test point 1")
-	# # Explore all paths to the function
-	# # simgr.explore(find=is_at_function, show_progressbar=True)
-	# simgr.explore(find=lambda s: s.addr == function_address + 4)
-
-	# print("test point 2")
-	# # Iterate through found paths
-	# for found in simgr.found:
-	# 	# Get the call site of the function
-	# 	caller_state = found.history.bbl_addrs[-2]  # Assuming the function is directly called
+		found = sm.found
+		'''
+		Retrieve a concrete value for the password value from the found path.
+		If you put this password in the program's first argument, you should be
+		able to strcpy() any string you want into the destination buffer and
+		cause a segmentation fault if it is too large :)
+		'''
+		if len(found) > 0:    #   Make sure we found a path before giving the solution
+			found = sm.found[0]
+			result = found.solver.eval(argv[1], cast_to=bytes)
+			try:
+				result = result[:result.index(b'\0')]
+			except ValueError:
+				pass
+		else:   # Aww somehow we didn't find a path.  Time to work on that check() function!
+			result = "Couldn't find any paths which satisfied our conditions."
 		
-	# 	# Analyze the data flow to the function's inputs
-	# 	for arg in found.callstack.current_args:
-	# 		print(f"Argument value: {arg}")
 
-	# 		# Perform further analysis if needed, such as tracking the source of the data
-	# 		# Example: Get the symbolic expression of the argument
-	# 		symbolic_expr = found.solver.eval(arg)
-	# 		print(f"Symbolic expression: {symbolic_expr}")
-
-	# 	# if (x.end_node == 'psa_sign_hash'):
-	# 	# 	func_addr = locate_function(project, 'psa_sign_hash')
-	# 	# 	if func_addr is None:
-	# 	# 		raise Exception("Function psa_sign_hash not found in the binary")
-
-	# 	# 	# # Create a state at the start of the psa_sign_hash function
-	# 	# 	state = project.factory.blank_state(addr=func_addr)
-
-	# 	# 	# Define function arguments
-	# 	# 	key = claripy.BVS('key', 32)  # Assume 32-bit key ID
-	# 	# 	alg = claripy.BVS('alg', 32)  # Assume 32-bit algorithm ID
-	# 	# 	hash_ptr = claripy.BVV(0x10000000, 32)  # Assume a hash pointer at 0x10000000
-	# 	# 	hash_length = claripy.BVS('hash_length', 32)  # Size of the hash buffer
-	# 	# 	signature_ptr = claripy.BVV(0x20000000, 32)  # Assume a signature buffer pointer at 0x20000000
-	# 	# 	signature_size = claripy.BVS('signature_size', 32)  # Size of the signature buffer
-	# 	# 	signature_length_ptr = claripy.BVV(0x30000000, 32)  # Assume a pointer to the signature length
-
-	# 	# 	# Set registers or stack values for the function arguments
-	# 	# 	state.regs.r0 = key
-	# 	# 	state.regs.r1 = alg
-	# 	# 	state.regs.r2 = hash_ptr
-	# 	# 	state.regs.r3 = hash_length
-	# 	# 	state.regs.r4 = signature_ptr
-	# 	# 	state.regs.r5 = signature_size
-	# 	# 	state.regs.r6 = signature_length_ptr
-
-	# 	# 	# Define constraints for valid parameters
-	# 	# 	state.solver.add(key != 0)
-	# 	# 	state.solver.add(alg != 0)
-	# 	# 	state.solver.add(hash_ptr != 0)
-	# 	# 	state.solver.add(hash_length > 0)
-	# 	# 	state.solver.add(signature_ptr != 0)
-	# 	# 	state.solver.add(signature_size > 0)
-	# 	# 	state.solver.add(signature_length_ptr != 0)
-
-	# 	# 	# Simulate the function
-	# 	# 	simgr = project.factory.simulation_manager(state)
-	# 	# 	simgr.explore(find=lambda s: s.addr == func_addr + 4)  # Adjust the offset as needed
-
-	# 	# 	# Check results
-	# 	# 	if simgr.found:
-	# 	# 		for found_state in simgr.found:
-	# 	# 			print("Assertions satisfied at address:", hex(found_state.addr))
-	# 	# 	else:
-	# 	# 		print("No paths found that satisfy the assertions.")		
-
-	# # if dumpfn:
-	# write_functions_csv(cfg.kb.functions.items());	
 	
