@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 import yaml
 
-class FunctionConfig:
+class SpecParse:
 	def __init__(self, name, num_args, args, output):
 		self.name = name
 		self.num_args = num_args
 		self.args = args
 		self.output = output
+		self.address = None
 
 	def __repr__(self):
-		return (f"FunctionConfig(name={self.name}, num_args={self.num_args}, "
-				f"args={self.args}, output={self.output})")
+		return (f"SpecParse(name={self.name}, num_args={self.num_args}, "
+				f"args={self.args}, output={self.output},  address={self.address})")
+	
+	def setAddr(self, addr):
+		self.address = addr
 
 class Argument:
 	def __init__(self, name, datatype, size, constraints):
@@ -40,8 +44,8 @@ def read_yaml(file_path):
 			print(f"Error parsing YAML file: {exc}")
 			return None
 
-# Function to create FunctionConfig objects from parsed YAML
-def create_function_configs(yaml_data):
+# Function to create SpecParse objects from parsed YAML
+def create_service_spec(yaml_data):
 	functions = []
 	for function_data in yaml_data['functions']:
 		function_info = function_data['function']
@@ -56,7 +60,7 @@ def create_function_configs(yaml_data):
 		output_info = function_info['output']
 		output = Output(output_info['type'], output_info['size'])
 
-		functions.append(FunctionConfig(name, num_args, args, output))
+		functions.append(SpecParse(name, num_args, args, output))
 
 	return functions
 

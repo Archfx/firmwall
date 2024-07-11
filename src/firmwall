@@ -13,10 +13,11 @@ import csv
 import yaml
 
 import os
+from termcolor import colored
 
 
 sys.path.append('/src/spec_mgr')
-from spec_mgr import FunctionConfig, Argument, Output, read_yaml, create_function_configs
+from spec_mgr import SpecParse, Argument, Output, read_yaml, create_service_spec
 
 
 import timeout_decorator
@@ -66,8 +67,8 @@ def save_cfg(project, start_fn, cfg_name):
 	plot_cfg(cfg, cfg_name, format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
 
 # Function to locate the address of psa_sign_hash
-def locate_function(project, func_name):
-    cfg = project.analyses.CFGFast()
+def locate_function(cfg, func_name):
+    # cfg = project.analyses.CFGFast()
     for func_addr, func in cfg.kb.functions.items():
         if func.name == func_name:
             return func_addr
@@ -100,8 +101,32 @@ def get_subgraphs_to_end_nodes(cfg_graph, end_nodes, x):
 
     return subgraphs
 
+# def get_subgraphs_from_start_nodes(cfg_graph, start_nodes, x):
+#     subgraphs = {}
+#     for start_node in start_nodes:
+#         # Perform DFS up to depth x from the start node in the original graph
+#         def limited_dfs(graph, start_node, depth):
+#             visited = set()
+#             stack = [(start_node, 0)]
+#             while stack:
+#                 node, current_depth = stack.pop()
+#                 if node not in visited and current_depth <= depth:
+#                     visited.add(node)
+#                     if current_depth < depth:
+#                         stack.extend((neighbor, current_depth + 1) for neighbor in graph[node])
+#             return visited
+
+#         reachable_nodes = limited_dfs(cfg_graph, start_node, x)
+        
+#         # Extract the subgraph from the original CFG
+#         subgraph = cfg_graph.subgraph(reachable_nodes).copy()
+        
+#         subgraphs[start_node] = subgraph
+
+#     return subgraphs
+
 def get_subgraphs_from_start_nodes(cfg_graph, start_nodes, x):
-    subgraphs = {}
+    subgraphs = []
     for start_node in start_nodes:
         # Perform DFS up to depth x from the start node in the original graph
         def limited_dfs(graph, start_node, depth):
@@ -120,7 +145,7 @@ def get_subgraphs_from_start_nodes(cfg_graph, start_nodes, x):
         # Extract the subgraph from the original CFG
         subgraph = cfg_graph.subgraph(reachable_nodes).copy()
         
-        subgraphs[start_node] = subgraph
+        subgraphs.append(subgraph)
 
     return subgraphs
 
@@ -178,6 +203,18 @@ def get_args():
 
 	return args.dumpfn
 
+def largest_subgraph_containing_node(graph, node):
+    # Find all strongly connected components
+    sccs = list(nx.strongly_connected_components(graph))
+    
+    # Find the SCC containing the particular node
+    for scc in sccs:
+        if node in scc:
+            # Create a subgraph with the nodes in the SCC
+            subgraph = graph.subgraph(scc).copy()
+            return subgraph
+    return None
+
 class serviceInfo:
 	def __init__(self, starting_nodes, starting_addrs, end_node, subgraph):
 		self.starting_nodes = starting_nodes
@@ -194,75 +231,96 @@ if __name__ == "__main__":
 	elf_file = path+"/bin/zephyr.elf"
 	res_folder = path + "/res"
 	func_file = res_folder+"/functions.csv"
-	spec_path = path + '/spec/spec.yml'
+	spec_file = path + '/spec/spec.yml'
+
+	print(colored(f"Loading the project at {path}!", "blue", attrs=["reverse", "bold"]))
+
+	if not os.path.exists(elf_file):
+		print(colored(f"Could not find the binary file {elf_file}!", "red", attrs=["reverse", "bold"]))
+
+	if not os.path.exists(spec_file):
+		print(colored(f"Could not find the specification file {spec_file}!", "red", attrs=["reverse", "bold"]))
 
 
 	project = angr.Project(elf_file, load_options={'auto_load_libs': False})
 
-	spec_data = read_yaml(spec_path)
+	print(colored(f"Parsing the specification at {spec_file}!", "blue", attrs=["reverse", "bold"]))
 
-	# Create FunctionConfig objects
-	if 	spec_data:
-		function_configs = create_function_configs(	spec_data)
+	spec_data = read_yaml(spec_file)
 
-		# Print the list of FunctionConfig objects
-		for function_config in function_configs:
-			print(function_config)
-	# # cfg = project.analyses.CFGFast(show_progressbar=True)
+	assert spec_data, "Unable to read spec data'"
+
+	# Create SpecParse objects
+	service_spec = create_service_spec(	spec_data)
+
+	# Print the list of SpecParse objects
+	# for function_config in service_spec:
+	# 	print(function_config)
+
+	# This CFG is just for decoding function addresses
+	# cfg = project.analyses.CFGFast(show_progressbar=True)
+	cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True, state_add_options=angr.sim_options.refs, context_sensitivity_level=2)
+
+	
+
+	for function_spec in service_spec:
+		function_spec.setAddr(locate_function(cfg, function_spec.name))
+		print(function_spec)
+
 	# cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True, state_add_options=angr.sim_options.refs, context_sensitivity_level=2)
 
-	# function_nodes = []
-	# for func_addr, func in cfg.kb.functions.items():
-	# 	# print(f"Function name: {func.name}, Address: {hex(func_addr)}")
-	# 	# Get the node corresponding to the function address
-	# 	func_node = cfg.get_any_node(func_addr)
-	# 	if func_node:
-	# 		function_nodes.append(func_node)
-	
-	# service_nodes = [
+	for function_spec in service_spec:
+		print(colored(f"Processing the function {function_spec.name}!", "blue", attrs=["reverse", "bold"]))
+		func_node = cfg.get_any_node(function_spec.address)
+		print(func_node)
+		subgraphs = get_subgraphs_from_start_nodes(cfg.graph, [func_node], 100)
+		print (subgraphs)
+		for x in subgraphs:
+			# print("Subgraph has %d nodes and %d edges" % (len(x.nodes()), len(x.edges())))
 
-	# 	"psa_crypto_init",
-	# 	# Key Management
-	# 	"psa_generate_key",
-	# 	"psa_import_key",
-	# 	"psa_export_key",
-	# 	"psa_destroy_key",
+			end_nodes, end_addrs = get_end_nodes(x)
 
-	# 	# Hashing
-	# 	"psa_hash_setup",
-	# 	"psa_hash_update",
-	# 	"psa_hash_finish",
-	# 	"psa_hash_verify",
+			print (end_nodes)
 
-	# 	# Message Authentication Codes (MAC)
-	# 	"psa_mac_compute",
-	# 	"psa_mac_sign_setup",
-	# 	"psa_mac_verify_setup",
-	# 	"psa_mac_update",
-	# 	"psa_mac_sign_finish",
-	# 	"psa_mac_verify_finish",
+		# Create an initial state
+		start_state = project.factory.blank_state(addr=function_spec.address)
 
-	# 	# Symmetric Encryption and Decryption
-	# 	"psa_cipher_encrypt_setup",
-	# 	"psa_cipher_decrypt_setup",
-	# 	"psa_cipher_update",
-	# 	"psa_cipher_finish",
+		# # Create a simulation manager
+		simgr = project.factory.simulation_manager(start_state)
 
-	# 	# Asymmetric Encryption and Decryption
-	# 	"psa_asymmetric_encrypt",
-	# 	"psa_asymmetric_decrypt",
+		# Define the end address function
+		def is_end_address(state):
+			if state.addr in end_addrs:
+				return True
+			else: return False
 
-	# 	# Digital Signatures
-	# 	"psa_sign_hash",
-	# 	"psa_verify_hash",
+			# return state.addr == project.loader.main_object.get_symbol(x.end_node)
+		
+		@timeout_decorator.timeout(1000)  # Timeout in seconds
+		def explore_with_timeout(simgr):
+			simgr.explore(find=is_end_address)
+			return simgr
+		
+		try:
+			# Explore the binary to find the end address with a timeout
+			simgr = explore_with_timeout(simgr)
 
-	# 	# Key Agreement
-	# 	"psa_raw_key_agreement",
+			# Check the results
+			if simgr.found:
+				found_state = simgr.found[0]
+				print("End address reached!")
+		except timeout_decorator.timeout_decorator.TimeoutError:
+			print("Symbolic execution timed out.")
 
-	# 	# Random Number Generation
-	# 	"psa_generate_random"
-	# ]
+		# # Explore the binary to find the end address
+		# simgr.explore(find=is_end_address)
 
+		# Check the results
+		if simgr.found:
+			found_state = simgr.found[0]
+			print("End address reached!")
+
+# ================
 
 	# end_nodes = []
 	# for node in function_nodes:
