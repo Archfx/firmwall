@@ -1,5 +1,32 @@
 functions:
   - function:
+      name: processArrays
+      num_args: 4
+      arg_1: 
+        name: array1
+        type: ptr
+        size: 32
+        constraints: [byte-array]
+      arg_2: 
+        name: length1
+        type: int
+        size: 32
+        constraints: [0<, 10>, int]
+      arg_3:
+        name: array2
+        type: ptr
+        size: 32
+        constraints: [byte-array]
+      arg_4:
+        name: length2
+        type: int
+        size: 32
+        constraints: [0<, 10>, int]
+      output:
+        type: void
+        size: 0
+
+  - function:
       name: reverseArray
       num_args: 2
       arg_1: 

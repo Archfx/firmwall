@@ -6,6 +6,7 @@ import angr
 from angrutils import *
 import networkx as nx
 import argparse
+import matplotlib.pyplot as plt
 
 import re
 
@@ -188,9 +189,10 @@ def get_args():
 	# Create the parser
 	parser = argparse.ArgumentParser(description="Firmware firmware binary analysis tool.")
 
+	parser.add_argument('-p', '--project', type=str, help='Project path')
 	# Add arguments
 	parser.add_argument('-d', '--dumpfn', action='store_true', help='Dump available functions in the firmware')
-	# parser.add_argument('-n', '--number', type=int, help='A number to process')
+	parser.add_argument('-s', '--svg', action='store_true', help='Save the CFG into a SVG')
 	# parser.add_argument('-s', '--string', type=str, help='A string to process')
 	# parser.add_argument('-l', '--list', nargs='+', help='A list of values')
 
@@ -201,7 +203,7 @@ def get_args():
 	# if args.verbose:
 	#     print("Verbose mode enabled")
 
-	return args.dumpfn
+	return args
 
 def largest_subgraph_containing_node(graph, node):
     # Find all strongly connected components
@@ -227,11 +229,15 @@ if __name__ == "__main__":
 		print("Usage: firmwall <firmware_path>" )
 		sys.exit(1)
 
-	path = sys.argv[1]
+	attr = get_args()
+	path = attr.project
 	elf_file = path+"/bin/zephyr.elf"
 	res_folder = path + "/res"
 	func_file = res_folder+"/functions.csv"
 	spec_file = path + '/spec/spec.yml'
+
+	if attr.svg: dump_svg = True
+	else: dump_svg = False
 
 	print(colored(f"Loading the project at {path}!", "blue", attrs=["reverse", "bold"]))
 
@@ -253,21 +259,17 @@ if __name__ == "__main__":
 	# Create SpecParse objects
 	service_spec = create_service_spec(	spec_data)
 
-	# Print the list of SpecParse objects
-	# for function_config in service_spec:
-	# 	print(function_config)
-
-	# This CFG is just for decoding function addresses
+	# CFG for decoding function addresses and creating the subgraphs
 	# cfg = project.analyses.CFGFast(show_progressbar=True)
 	cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True, state_add_options=angr.sim_options.refs, context_sensitivity_level=2)
-
+	if (dump_svg):
+		plot_cfg(cfg, res_folder + "/cfg", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
 	
 
 	for function_spec in service_spec:
 		function_spec.setAddr(locate_function(cfg, function_spec.name))
 		print(function_spec)
 
-	# cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True, state_add_options=angr.sim_options.refs, context_sensitivity_level=2)
 
 	for function_spec in service_spec:
 		print(colored(f"Processing the function {function_spec.name}!", "blue", attrs=["reverse", "bold"]))
@@ -277,11 +279,10 @@ if __name__ == "__main__":
 		print (subgraphs)
 		for x in subgraphs:
 			# print("Subgraph has %d nodes and %d edges" % (len(x.nodes()), len(x.edges())))
-
 			end_nodes, end_addrs = get_end_nodes(x)
 
 			print (end_nodes)
-
+			
 		# Create an initial state
 		start_state = project.factory.blank_state(addr=function_spec.address)
 
@@ -311,9 +312,6 @@ if __name__ == "__main__":
 				print("End address reached!")
 		except timeout_decorator.timeout_decorator.TimeoutError:
 			print("Symbolic execution timed out.")
-
-		# # Explore the binary to find the end address
-		# simgr.explore(find=is_end_address)
 
 		# Check the results
 		if simgr.found:

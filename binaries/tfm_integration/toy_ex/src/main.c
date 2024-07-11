@@ -26,6 +26,8 @@ void reverseArray(unsigned char* array, int length) {
     }
 
 	addRandomValue(array, length);
+
+    return 1;
 }
 
 
