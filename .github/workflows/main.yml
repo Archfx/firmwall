@@ -1,0 +1,19 @@
+name: Run.sh
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Run the script
+      run: |
+        chmod +x ./run.sh
+        ./run.sh
