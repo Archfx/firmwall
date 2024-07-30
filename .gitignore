@@ -1,3 +1,4 @@
 testing
 .venv
 */__pycache__
+src.old
