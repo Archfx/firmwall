@@ -16,10 +16,10 @@ structures:
    type: uint32_t
    constraints: 
     - PSA_KEY_ID_USER_MIN<
-	- PSA_KEY_ID_USER_MAX>
-	- PSA_KEY_ID_VENDOR_MIN<
-	- PSA_KEY_ID_VENDOR_MAX>
-	- !=0
+    - PSA_KEY_ID_USER_MAX>
+    - PSA_KEY_ID_VENDOR_MIN<
+    - PSA_KEY_ID_VENDOR_MAX>
+    - !=0
 ```
 
 ### Function parameter description:
@@ -44,12 +44,13 @@ functions:
    arg_1: 
     name: id
     type: psa_key_id_t
-    constraints: []
+    constraints: 
+     -
    arg_2: 
     name: handle
     type: psa_key_handle_t*
     constraints: 
-		-constraint-1
+     -
    output:
    type: psa_status_t
 ```
