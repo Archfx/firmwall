@@ -54,4 +54,4 @@ __Function defintion template__
   # Add other functions similarly
 ```
 
-Data structures and function defintions have different formats in yml format. Please check the [sample_promt.md] for more instructions on generating the specification using LLMs.
+Data structures and function defintions have different formats in yml format. Please check the [sample_promt.md](scripts/sample_prompt.md) for more instructions on generating the specification using LLMs.
