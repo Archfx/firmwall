@@ -14,7 +14,12 @@ Using the following convention to represent the functions defined in Trusted Fir
   -	structure:
 	name: psa_key_id_t
 	type: uint32_t
-	constraints: [PSA_KEY_ID_USER_MIN<, PSA_KEY_ID_USER_MAX>,  PSA_KEY_ID_VENDOR_MIN<, PSA_KEY_ID_VENDOR_MAX>, !=0]
+	constraints: 
+		- PSA_KEY_ID_USER_MIN<
+		- PSA_KEY_ID_USER_MAX>
+		- PSA_KEY_ID_VENDOR_MIN<
+		- PSA_KEY_ID_VENDOR_MAX>
+		- !=0
 ```
 
 ### Function parameter description:
