@@ -35,23 +35,23 @@ signature_ptr = claripy.BVV(0x20000000, 32)  # Assume a signature buffer pointer
 signature_size = claripy.BVS('signature_size', 32)  # Size of the signature buffer
 signature_length_ptr = claripy.BVV(0x30000000, 32)  # Assume a pointer to the signature length
 
-# Set registers or stack values for the function arguments
-state.regs.r0 = key
-state.regs.r1 = alg
-state.regs.r2 = hash_ptr
-state.regs.r3 = hash_length
-state.regs.r4 = signature_ptr
-state.regs.r5 = signature_size
-state.regs.r6 = signature_length_ptr
+# # Set registers or stack values for the function arguments
+# state.regs.r0 = key
+# state.regs.r1 = alg
+# state.regs.r2 = hash_ptr
+# state.regs.r3 = hash_length
+# state.regs.r4 = signature_ptr
+# state.regs.r5 = signature_size
+# state.regs.r6 = signature_length_ptr
 
-# Define constraints for valid parameters
-state.solver.add(key != 0)
-state.solver.add(alg != 0)
-state.solver.add(hash_ptr != 0)
-state.solver.add(hash_length > 0)
-state.solver.add(signature_ptr != 0)
-state.solver.add(signature_size > 0)
-state.solver.add(signature_length_ptr != 0)
+# # Define constraints for valid parameters
+# state.solver.add(key != 0)
+# state.solver.add(alg != 0)
+# state.solver.add(hash_ptr != 0)
+# state.solver.add(hash_length > 0)
+# state.solver.add(signature_ptr != 0)
+# state.solver.add(signature_size > 0)
+# state.solver.add(signature_length_ptr != 0)
 
 # Simulate the function
 simgr = project.factory.simulation_manager(state)
@@ -70,14 +70,17 @@ def map_state_args( state, arch, num_args, obj):
 	if (arch == "arm"):
 		for x in range (num_args):
 			# Set registers or stack values for the function arguments
-			state.regs.r{x} = obj[x]
+			# state.regs.r{x} = obj[x]
+			setattr(state.regs, f"r{x}", obj[x])
+
+	return state
 
 
-	# Define constraints for valid parameters
-	state.solver.add(key != 0)
-	state.solver.add(alg != 0)
-	state.solver.add(hash_ptr != 0)
-	state.solver.add(hash_length > 0)
-	state.solver.add(signature_ptr != 0)
-	state.solver.add(signature_size > 0)
-	state.solver.add(signature_length_ptr != 0)
+def add_state_consts( state, num_args, constraints):
+	for constraint in constraints:
+		state.solver.add(constraint)
+	return state
+
+def init_reg_vars (num_args):
+	
+

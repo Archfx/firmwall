@@ -8,6 +8,7 @@ RESET = \033[0m
 LIST_FN := $(FIRMWALL_HOME)/src/list_func
 SYMB_FN := $(FIRMWALL_HOME)/src/symbolic_sim
 SVG_FN := $(FIRMWALL_HOME)/src/save_svg
+FIRMWALL := $(FIRMWALL_HOME)/src/firmwall
 ELF_FILE := bin/zephyr.elf
 
 # SUBDIRS := $(wildcard tfm_integration/*/.)
@@ -24,13 +25,10 @@ $(SUBDIRS):
 		@echo "================================================= $(RESET)"
 		mkdir -p $@/res
 		start_time=$$(date +%s); \
-		python3 $(LIST_FN) $@/$(ELF_FILE) $@/res; \
-		python3 $(SYMB_FN) $@/$(ELF_FILE) $@/res; \
-		python3 $(SVG_FN) $@/$(ELF_FILE) $@/res; \
+		python3 $(FIRMWALL) -p $@; \
 		end_time=$$(date +%s); \
 		echo "$(BOLD)$(YELLOW)Elapsed time: $$((end_time - start_time)) seconds."
 		@echo "================================================= $(RESET)"
-
 
 
 # Clean target (optional)

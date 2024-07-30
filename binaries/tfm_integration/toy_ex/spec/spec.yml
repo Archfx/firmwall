@@ -55,4 +55,15 @@ functions:
   #       type: int
   #       size: 32
 
-
+structures:
+  -structure:
+    name: array_structure
+    num_items: 2
+    item_1:
+      name: data_array_1
+      type: ptr
+      size: 32
+    item_2:
+      name: data_array_2
+      type: ptr
+      size: 32

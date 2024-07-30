@@ -40,3 +40,954 @@ functions:
       output:
         type: int
         size: 32
+
+  - function:
+      name: psa_open_key
+      num_args: 2
+      arg_1: 
+        name: psa_key_id_t
+        type: ptr
+        size: 32
+        constraints: [byte-array]
+      arg_2: 
+        name: key_handle
+        type: ptr
+        size: 32
+        constraints: [0<, 10>, int]
+      output:
+        type: int
+        size: 32
+
+  - function:
+      name: psa_crypto_init
+      num_args: 0
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_open_key
+      num_args: 2
+      arg_1:
+        name: id
+        type: psa_key_id_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: handle
+        type: psa_key_handle_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_close_key
+      num_args: 1
+      arg_1:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_import_key
+      num_args: 4
+      arg_1:
+        name: attributes
+        type: psa_key_attributes_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: data
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: data_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: handle
+        type: psa_key_handle_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_destroy_key
+      num_args: 1
+      arg_1:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_get_key_attributes
+      num_args: 2
+      arg_1:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: attributes
+        type: psa_key_attributes_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_reset_key_attributes
+      num_args: 1
+      arg_1:
+        name: attributes
+        type: psa_key_attributes_t*
+        size: 32
+        constraints: []
+      output:
+        type: void
+        size: 0
+
+  - function:
+      name: psa_export_key
+      num_args: 3
+      arg_1:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: data
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: data_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: data_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_export_public_key
+      num_args: 3
+      arg_1:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: data
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: data_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: data_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_copy_key
+      num_args: 3
+      arg_1:
+        name: source_handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: target_attributes
+        type: psa_key_attributes_t*
+        size: 32
+        constraints: []
+      arg_3:
+        name: target_handle
+        type: psa_key_handle_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_generate_key
+      num_args: 2
+      arg_1:
+        name: attributes
+        type: psa_key_attributes_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: handle
+        type: psa_key_handle_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_hash_setup
+      num_args: 2
+      arg_1:
+        name: operation
+        type: psa_hash_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_hash_update
+      num_args: 2
+      arg_1:
+        name: operation
+        type: psa_hash_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: input
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: input_length
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_hash_finish
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_hash_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: hash
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: hash_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: hash_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_hash_verify
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_hash_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: hash
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: hash_length
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_hash_abort
+      num_args: 1
+      arg_1:
+        name: operation
+        type: psa_hash_operation_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_mac_sign_setup
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_mac_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_mac_verify_setup
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_mac_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_mac_update
+      num_args: 2
+      arg_1:
+        name: operation
+        type: psa_mac_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: input
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: input_length
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_mac_sign_finish
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_mac_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: mac
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: mac_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: mac_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_mac_verify_finish
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_mac_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: mac
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: mac_length
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_mac_abort
+      num_args: 1
+      arg_1:
+        name: operation
+        type: psa_mac_operation_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_cipher_encrypt_setup
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_cipher_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_cipher_decrypt_setup
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_cipher_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_cipher_generate_iv
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_cipher_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: iv
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: iv_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: iv_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_cipher_set_iv
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_cipher_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: iv
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: iv_length
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_cipher_update
+      num_args: 4
+      arg_1:
+        name: operation
+        type: psa_cipher_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: input
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: input_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: output
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_5:
+        name: output_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_6:
+        name: output_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_cipher_finish
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_cipher_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: output
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: output_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_4:
+        name: output_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_cipher_abort
+      num_args: 1
+      arg_1:
+        name: operation
+        type: psa_cipher_operation_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_aead_encrypt
+      num_args: 7
+      arg_1:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: nonce
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_4:
+        name: nonce_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_5:
+        name: additional_data
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_6:
+        name: additional_data_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_7:
+        name: plaintext
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_8:
+        name: plaintext_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_9:
+        name: ciphertext
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_10:
+        name: ciphertext_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_11:
+        name: ciphertext_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_aead_decrypt
+      num_args: 7
+      arg_1:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: nonce
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_4:
+        name: nonce_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_5:
+        name: additional_data
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_6:
+        name: additional_data_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_7:
+        name: ciphertext
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_8:
+        name: ciphertext_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_9:
+        name: plaintext
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_10:
+        name: plaintext_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_11:
+        name: plaintext_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_generate_random
+      num_args: 2
+      arg_1:
+        name: output
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_2:
+        name: output_size
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_setup
+      num_args: 2
+      arg_1:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_get_capacity
+      num_args: 2
+      arg_1:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: capacity
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_set_capacity
+      num_args: 2
+      arg_1:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: capacity
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_input_bytes
+      num_args: 4
+      arg_1:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: step
+        type: psa_key_derivation_step_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: data
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_4:
+        name: data_length
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_input_key
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: step
+        type: psa_key_derivation_step_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: handle
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_output_bytes
+      num_args: 3
+      arg_1:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      arg_2:
+        name: output
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_3:
+        name: output_length
+        type: size_t
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_output_key
+      num_args: 3
+      arg_1:
+        name: attributes
+        type: psa_key_attributes_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      arg_3:
+        name: handle
+        type: psa_key_handle_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_key_derivation_abort
+      num_args: 1
+      arg_1:
+        name: operation
+        type: psa_key_derivation_operation_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  - function:
+      name: psa_raw_key_agreement
+      num_args: 4
+      arg_1:
+        name: alg
+        type: psa_algorithm_t
+        size: 32
+        constraints: []
+      arg_2:
+        name: private_key
+        type: psa_key_handle_t
+        size: 32
+        constraints: []
+      arg_3:
+        name: peer_key
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_4:
+        name: peer_key_length
+        type: size_t
+        size: 32
+        constraints: []
+      arg_5:
+        name: output
+        type: uint8_t*
+        size: 8
+        constraints: []
+      arg_6:
+        name: output_size
+        type: size_t
+        size: 32
+        constraints: []
+      arg_7:
+        name: output_length
+        type: size_t*
+        size: 32
+        constraints: []
+      output:
+        type: psa_status_t
+        size: 32
+
+  

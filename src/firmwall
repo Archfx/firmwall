@@ -261,8 +261,9 @@ if __name__ == "__main__":
 
 	# CFG for decoding function addresses and creating the subgraphs
 	# cfg = project.analyses.CFGFast(show_progressbar=True)
-	cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True, state_add_options=angr.sim_options.refs, context_sensitivity_level=2)
+	cfg = project.analyses.CFGEmulated(keep_state=True, show_progressbar=True, state_add_options=angr.sim_options.refs, context_sensitivity_level=2, fail_fast=True)
 	if (dump_svg):
+		# plot_cfg(cfg, res_folder + "/cfg", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
 		plot_cfg(cfg, res_folder + "/cfg", format="svg", asminst=True, remove_imports=True, remove_path_terminator=True)
 	
 

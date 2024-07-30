@@ -1,0 +1,118 @@
+structures:
+  - structure:
+      name: psa_key_id_t
+      type: uint32_t
+      constraints: [PSA_KEY_ID_USER_MIN<, PSA_KEY_ID_USER_MAX>, PSA_KEY_ID_VENDOR_MIN<, PSA_KEY_ID_VENDOR_MAX>, =!0]
+
+  - structure:
+      name: psa_algorithm_t
+      type: uint32_t
+      constraints: [PSA_ALG_MIN<, PSA_ALG_MAX>]
+
+  - structure:
+      name: psa_key_type_t
+      type: uint32_t
+      constraints: [PSA_KEY_TYPE_MIN<, PSA_KEY_TYPE_MAX>]
+
+  - structure:
+      name: psa_key_usage_t
+      type: uint32_t
+      constraints: [PSA_KEY_USAGE_MIN<, PSA_KEY_USAGE_MAX>]
+
+  - structure:
+      name: psa_status_t
+      type: int32_t
+      constraints: [PSA_STATUS_MIN<, PSA_STATUS_MAX>]
+
+  - structure:
+      name: psa_key_lifetime_t
+      type: uint32_t
+      constraints: [PSA_KEY_LIFETIME_MIN<, PSA_KEY_LIFETIME_MAX>]
+
+  - structure:
+      name: psa_key_persistence_t
+      type: uint8_t
+      constraints: [PSA_KEY_PERSISTENCE_MIN<, PSA_KEY_PERSISTENCE_MAX>]
+
+  - structure:
+      name: psa_key_derivation_step_t
+      type: uint8_t
+      constraints: [PSA_KEY_DERIVATION_STEP_MIN<, PSA_KEY_DERIVATION_STEP_MAX>]
+
+  - structure:
+      name: psa_key_attributes_t
+      type: struct
+      constraints: []
+
+  - structure:
+      name: psa_key_bits_t
+      type: uint32_t
+      constraints: [PSA_KEY_BITS_MIN<, PSA_KEY_BITS_MAX>]
+
+  - structure:
+      name: mbedtls_psa_key_slot_t
+      type: struct
+      fields:
+        - name: attr
+          type: psa_key_attributes_t
+          constraints: []
+        - name: key_data
+          type: uint8_t*
+          constraints: []
+        - name: key_data_length
+          type: size_t
+          constraints: []
+
+  - structure:
+      name: mbedtls_psa_crypto_context_t
+      type: struct
+      fields:
+        - name: initialized
+          type: uint8_t
+          constraints: [0, 1]
+        - name: key_slots
+          type: mbedtls_psa_key_slot_t*
+          constraints: []
+        - name: key_slots_size
+          type: size_t
+          constraints: []
+
+  - structure:
+      name: mbedtls_psa_key_attributes_t
+      type: struct
+      fields:
+        - name: core
+          type: psa_key_attributes_t
+          constraints: []
+        - name: domain_parameters
+          type: uint8_t*
+          constraints: []
+        - name: domain_parameters_size
+          type: size_t
+          constraints: []
+
+  - structure:
+      name: mbedtls_psa_operation_t
+      type: struct
+      fields:
+        - name: alg
+          type: psa_algorithm_t
+          constraints: []
+        - name: key
+          type: psa_key_id_t
+          constraints: []
+        - name: input
+          type: uint8_t*
+          constraints: []
+        - name: input_length
+          type: size_t
+          constraints: []
+        - name: output
+          type: uint8_t*
+          constraints: []
+        - name: output_size
+          type: size_t
+          constraints: []
+        - name: output_length
+          type: size_t*
+          constraints: []
