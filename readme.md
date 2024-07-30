@@ -1,5 +1,7 @@
 firmwall
 ---
+[![Build Status](https://github.com/Archfx/firmwall/actions/workflows/main.yml/badge.svg)](https://github.com/Archfx/firmwall/actions/workflows/main.yml)
+
 
 Multi arch binary analysis tool for ...
 
