@@ -27,7 +27,7 @@ __Data structure template__
 
 ```yml
   structures:
-  -	structure:
+  - structure:
     name: 
     type: 
     constraints: 
