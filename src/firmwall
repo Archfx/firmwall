@@ -6,7 +6,7 @@ import angr
 from angrutils import *
 import networkx as nx
 import argparse
-import matplotlib.pyplot as plt
+
 
 import re
 
@@ -19,6 +19,7 @@ from termcolor import colored
 
 sys.path.append('/src/spec_mgr')
 from spec_mgr import SpecParse, Argument, Output, read_yaml, create_service_spec
+from mem_insp import on_mem_read, on_mem_write
 
 
 import timeout_decorator
@@ -285,7 +286,27 @@ if __name__ == "__main__":
 			print (end_nodes)
 			
 		# Create an initial state
-		start_state = project.factory.blank_state(addr=function_spec.address)
+		start_state = project.factory.blank_state(
+						addr=function_spec.address, 
+						add_options={
+							angr.options.SYMBOL_FILL_UNCONSTRAINED_MEMORY,
+							angr.options.SYMBOL_FILL_UNCONSTRAINED_REGISTERS,
+						},)
+
+		# Set up hooks for memory read and write operations
+		start_state.inspect.b('mem_read', when=angr.BP_BEFORE, action=on_mem_read)
+		start_state.inspect.b('mem_write', when=angr.BP_BEFORE, action=on_mem_write)
+
+		# Add constraints to the input string
+		# for i in range(num_input_chars):
+		# 	current_byte = input_str.get_byte(i)
+		# 	start_state.solver.add(
+		# 		claripy.Or(
+		# 			claripy.And(current_byte >= ord('a'), current_byte <= ord('z')),
+		# 			claripy.And(current_byte >= ord('A'), current_byte <= ord('Z')),
+		# 			claripy.And(current_byte >= ord('0'), current_byte <= ord('9'))
+		# 		)
+		# 	)
 
 		# # Create a simulation manager
 		simgr = project.factory.simulation_manager(start_state)
@@ -311,12 +332,13 @@ if __name__ == "__main__":
 			if simgr.found:
 				found_state = simgr.found[0]
 				print("End address reached!")
+				constraints = found_state.solver.constraints
+
+				for constraint in constraints:
+					print(constraint)
+
 		except timeout_decorator.timeout_decorator.TimeoutError:
 			print("Symbolic execution timed out.")
 
-		# Check the results
-		if simgr.found:
-			found_state = simgr.found[0]
-			print("End address reached!")
 
 # ================
