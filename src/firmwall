@@ -17,9 +17,11 @@ import os
 from termcolor import colored
 
 
-sys.path.append('/src/spec_mgr')
+sys.path.append('/src')
 from spec_mgr import SpecParse, Argument, Output, read_yaml, create_service_spec
-from mem_insp import on_mem_read, on_mem_write
+from memory_tracker import MemoryTracker, on_mem_read, on_mem_write, FreeDetector, MallocDetector
+# from mem_insp import on_mem_read, on_mem_write
+
 
 
 import timeout_decorator
@@ -274,9 +276,11 @@ if __name__ == "__main__":
 
 
 	for function_spec in service_spec:
+		
 		print(colored(f"Processing the function {function_spec.name}!", "blue", attrs=["reverse", "bold"]))
 		func_node = cfg.get_any_node(function_spec.address)
 		print(func_node)
+		if (not func_node): continue
 		subgraphs = get_subgraphs_from_start_nodes(cfg.graph, [func_node], 100)
 		print (subgraphs)
 		for x in subgraphs:
@@ -293,9 +297,23 @@ if __name__ == "__main__":
 							angr.options.SYMBOL_FILL_UNCONSTRAINED_REGISTERS,
 						},)
 
+		# Initialize the memory tracker
+		memory_tracker = MemoryTracker()
+
+		# Add the memory tracker to the state's globals
+		start_state.globals['memory_tracker'] = memory_tracker
+
 		# Set up hooks for memory read and write operations
 		start_state.inspect.b('mem_read', when=angr.BP_BEFORE, action=on_mem_read)
 		start_state.inspect.b('mem_write', when=angr.BP_BEFORE, action=on_mem_write)
+
+		# Hook the free() function with our custom SimProcedure
+		project.hook_symbol('free', FreeDetector())
+		project.hook_symbol('malloc', MallocDetector())
+
+		# Set up hooks for memory read and write operations
+		# start_state.inspect.b('mem_read', when=angr.BP_BEFORE, action=on_mem_read)
+		# start_state.inspect.b('mem_write', when=angr.BP_BEFORE, action=on_mem_write)
 
 		# Add constraints to the input string
 		# for i in range(num_input_chars):
